@@ -1,51 +1,39 @@
 package statistics.metrika
 
 import cats.effect._
-import sttp.client._
-import cats.syntax.all._
-import sttp.client.asynchttpclient.fs2.AsyncHttpClientFs2Backend
-import java.nio.ByteBuffer
-
-import cats.effect.{ContextShift, IO}
-import fs2.Stream
-
-import scala.concurrent.ExecutionContext
-
-import cats.effect.{IO, Resource}
 import cats.implicits._
-import java.io._
+import doobie.util.transactor._
+import statistics.metrika.api.MetrikaClient
+//import org.http4s.syntax._
+//import org.http4s.dsl.io._
+import statistics.metrika.db.DoobieManager._
+import org.http4s.implicits._
+import org.http4s.server.blaze._
 
-object Main extends App {
+import statistics.metrika.http.Routing
+
+object Main extends IOApp {
+//  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
 //  implicit val sttpBackend = AsyncHttpClientFs2Backend()
+  implicit val metrikaClient = new MetrikaClient;
 
-  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
-//  val effect = AsyncHttpClientFs2Backend[IO]().flatMap { implicit backend =>
-//    val stream: Stream[IO, ByteBuffer] = ...
-//
-//    basicRequest
-//      .streamBody(stream)
-//      .post(uri"...")
-//  }
+  override def run(args: List[String]): IO[ExitCode] = {
 
-  def inputStream(f: File): Resource[IO, FileInputStream] =
-    Resource.make {
-      IO(new FileInputStream(f))                         // build
-    } { inStream =>
-      IO(inStream.close()).handleErrorWith(_ => IO.unit) // release
-    }
+    val xa = Transactor.fromDriverManager[IO](
+      "org.postgresql.Driver", "jdbc:postgresql:world", "postgres", ""
+    )
 
-  def outputStream(f: File): Resource[IO, FileOutputStream] =
-    Resource.make {
-      IO(new FileOutputStream(f))                         // build
-    } { outStream =>
-      IO(outStream.close()).handleErrorWith(_ => IO.unit) // release
-    }
+    val resources = for {
+      xa <- initTransactor
+      httpServer <- BlazeServerBuilder[IO]
+          .bindHttp(8080)
+          .withHttpApp(Routing.getRouter)
+          .resource
 
-  def inputOutputStreams(in: File, out: File): Resource[IO, (InputStream, OutputStream)] =
-    for {
-      inStream  <- inputStream(in)
-      outStream <- outputStream(out)
-    } yield (inStream, outStream)
+    } yield (xa, httpServer)
+
+    resources.use { _ => IO.never }.as(ExitCode(0))
+  }
 
 //    args.headOption match {
 //      case Some(name) =>
