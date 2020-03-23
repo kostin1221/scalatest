@@ -19,15 +19,13 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
 
-    val xa = Transactor.fromDriverManager[IO](
-      "org.postgresql.Driver", "jdbc:postgresql:world", "postgres", ""
-    )
 
     val resources = for {
       xa <- initTransactor
-      httpServer <- BlazeServerBuilder[IO]
+      httpServer <-
+        BlazeServerBuilder[IO]
           .bindHttp(8080)
-          .withHttpApp(Routing.getRouter)
+          .withHttpApp(Routing.getRouter(xa))
           .resource
 
     } yield (xa, httpServer)

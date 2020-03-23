@@ -13,7 +13,8 @@ object MetrikaDataStreamer extends LazyLogging {
   def createMetrikaTaskAndStreamToDb(downloadStatisticsTask: DownloadStatisticsTask)(
     implicit metrikaClient: MetrikaClient,
     cs: ContextShift[IO],
-    timer: Timer[IO]
+    timer: Timer[IO],
+    transactor: HikariTransactor[IO]
   ): IO[Int] = {
     for {
       stream <- createTaskAndStreamWhenReady(downloadStatisticsTask)
@@ -25,7 +26,7 @@ object MetrikaDataStreamer extends LazyLogging {
     implicit metrikaClient: MetrikaClient,
     cs: ContextShift[IO],
     timer: Timer[IO],
-    transactor: Resource[IO, HikariTransactor[IO]]
+    transactor: HikariTransactor[IO]
   ): IO[fs2.Stream[IO, (Array[String], Array[String])]] = {
     for {
        getLogRequest <- MetrikaTaskCreator.createMetrikaTask(downloadStatisticsTask).map(

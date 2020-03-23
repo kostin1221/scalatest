@@ -2,6 +2,7 @@ package statistics.metrika.http
 
 import cats.data.Kleisli
 import cats.effect._
+import doobie.hikari.HikariTransactor
 import statistics.metrika.api.MetrikaClient
 import statistics.metrika.api.dto.MetrikaApi._
 import statistics.metrika.db.RequestStatusStorage
@@ -22,11 +23,13 @@ object Routing {
   private implicit val downloadTaskDecoder: EntityDecoder[IO, DownloadStatisticsTask] = jsonOf[IO, DownloadStatisticsTask]
   private implicit val downloadTaskEnсoder: EntityEncoder[IO, DownloadStatisticsTask] = jsonEncoderOf[IO, DownloadStatisticsTask]
 
-  def getRouter(
+  def getRouter(transactor: HikariTransactor[IO])(
                  implicit metrikaClient: MetrikaClient,
                  cs: ContextShift[IO],
                  timer: Timer[IO]
                ): Kleisli[IO, Request[IO], Response[IO]] = {
+
+    implicit val imTransactor: HikariTransactor[IO] = transactor
 
     val helloWorldService = HttpRoutes.of[IO] {
       case req @ POST -> Root / "direct-download-task" =>

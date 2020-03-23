@@ -2,24 +2,24 @@ package statistics.metrika.db
 
 import doobie.implicits._
 import cats.effect.{ContextShift, IO}
+import doobie.hikari.HikariTransactor
 import doobie.util.update.Update
 
 object DbStreamer {
-  def streamToDb(source: fs2.Stream[IO, (Array[String], Array[String])])(implicit cs: ContextShift[IO]): IO[Int] = {
-    val transactor = DoobieManager.initTransactor
+  def streamToDb(source: fs2.Stream[IO, (Array[String], Array[String])])(
+    implicit cs: ContextShift[IO],
+    xa: HikariTransactor[IO]
+  ): IO[Int] = {
 
-    transactor.use(xa => {
-        source
-          .chunkN(100)
-          .evalMap(chunk => {
-            val csvHead = chunk.head.get._1
-            val data = chunk.map(_._2)
+    source
+      .chunkN(100)
+      .evalMap(chunk => {
+        val csvHead = chunk.head.get._1
+        val data = chunk.map(_._2)
 
-            insert1(csvHead, data.toList).run.transact(xa)
-          })
-          .compile.fold(0)(_ + _)
-      }
-    )
+        insert1(csvHead, data.toList).run.transact(xa)
+      })
+      .compile.fold(0)(_ + _)
   }
 
   private def insert1(csvHead: Array[String], data: List[Array[String]]) = {

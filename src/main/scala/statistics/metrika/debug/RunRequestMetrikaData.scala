@@ -43,7 +43,7 @@ object RunRequestMetrikaData extends IOApp with LazyLogging {
 
 //    val count = new java.util.concurrent.atomic.AtomicLong(0)
 
-    val transactor = initTransactor
+    implicit val transactor = initTransactor
 //    val xa = Transactor.fromDriverManager[IO](
 //      "org.postgresql.Driver",     // driver classname
 //      "jdbc:postgresql://localhost:5442/metrika_fetcher",     // connect URL (driver-specific)
@@ -108,17 +108,19 @@ object RunRequestMetrikaData extends IOApp with LazyLogging {
 //    //
 //    //  io.map(r => IO(println(r)))
 
-    val req = MetrikaLogStreamPart(token, counter, 7380382, 0)
-    val streamIO = metrikaClient.streamLogRequestPartData(req)
-
-    val r = for {
-      stream <- streamIO
-//      upd <- stream.evalTap { p => IO(println(p)) }.compile.drain
-      upd <- DbStreamer.streamToDb(stream)
-    } yield upd
-
-    return r.map(_ => ExitCode.Success)
-    val count = new java.util.concurrent.atomic.AtomicLong(0)
+//    val req = MetrikaLogStreamPart(token, counter, 7380382, 0)
+//    val streamIO = metrikaClient.streamLogRequestPartData(req)
+//
+//    transactor.use(xa => {
+//      val r = for {
+//        stream <- streamIO
+//        //      upd <- stream.evalTap { p => IO(println(p)) }.compile.drain
+//        upd <- DbStreamer.streamToDb(stream)
+//      } yield upd
+//    })
+//
+//    return r.map(_ => ExitCode.Success)
+//    val count = new java.util.concurrent.atomic.AtomicLong(0)
 
 //    val st: Stream[Pure, List[String]] = Stream.emits(Seq(List("dsdsd", "4444"),List("dsdsd111", "222")))
 
