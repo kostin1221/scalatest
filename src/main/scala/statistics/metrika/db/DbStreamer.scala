@@ -1,15 +1,14 @@
 package statistics.metrika.db
 
-import doobie.implicits._
 import cats.effect.{ContextShift, IO}
 import doobie.hikari.HikariTransactor
+import doobie.implicits._
 import doobie.util.update.Update
 
 object DbStreamer {
-  def streamToDb(source: fs2.Stream[IO, (Array[String], Array[String])])(
-    implicit cs: ContextShift[IO],
-    xa: HikariTransactor[IO]
-  ): IO[Int] = {
+  def streamToDb(
+    source: fs2.Stream[IO, (Array[String], Array[String])]
+  )(implicit cs: ContextShift[IO], xa: HikariTransactor[IO]): IO[Int] = {
 
     source
       .chunkN(100)
@@ -19,7 +18,8 @@ object DbStreamer {
 
         insert1(csvHead, data.toList).run.transact(xa)
       })
-      .compile.fold(0)(_ + _)
+      .compile
+      .fold(0)(_ + _)
   }
 
   private def insert1(csvHead: Array[String], data: List[Array[String]]) = {
@@ -30,13 +30,12 @@ object DbStreamer {
 //    def getQuestionsList(n: Int): List[String] = if (n <= 1) List("?") else getQuestionsList(n-1) ::: List("?")
 //    val questionsPart = getQuestionsList(csvHead.length)
 
-    val valuesSqlPart = data.map(row =>
-      "(" + row.map(
-        col => s"'$col'"
-      ).mkString(",") + ")"
-    ).mkString(",")
+    val valuesSqlPart = data
+      .map(row => "(" + row.map(col => s"'$col'").mkString(",") + ")")
+      .mkString(",")
 
-    Update(s"insert into metrika_visits ($cols) values $valuesSqlPart").toUpdate0()
+    Update(s"insert into metrika_visits ($cols) values $valuesSqlPart")
+      .toUpdate0()
   }
 
 }

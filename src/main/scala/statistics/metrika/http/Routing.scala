@@ -4,8 +4,6 @@ import cats.data.Kleisli
 import cats.effect._
 import doobie.hikari.HikariTransactor
 import statistics.metrika.api.MetrikaClient
-import statistics.metrika.api.dto.MetrikaApi._
-import statistics.metrika.db.RequestStatusStorage
 import statistics.metrika.downloader.MetrikaDataStreamer
 //import cats.implicits._
 
@@ -20,14 +18,18 @@ import org.http4s.server.Router
 import statistics.metrika.api.dto.FetcherApi.DownloadStatisticsTask
 
 object Routing {
-  private implicit val downloadTaskDecoder: EntityDecoder[IO, DownloadStatisticsTask] = jsonOf[IO, DownloadStatisticsTask]
-  private implicit val downloadTaskEnсoder: EntityEncoder[IO, DownloadStatisticsTask] = jsonEncoderOf[IO, DownloadStatisticsTask]
+  private implicit val downloadTaskDecoder
+    : EntityDecoder[IO, DownloadStatisticsTask] =
+    jsonOf[IO, DownloadStatisticsTask]
+  private implicit val downloadTaskEnсoder
+    : EntityEncoder[IO, DownloadStatisticsTask] =
+    jsonEncoderOf[IO, DownloadStatisticsTask]
 
   def getRouter(transactor: HikariTransactor[IO])(
-                 implicit metrikaClient: MetrikaClient,
-                 cs: ContextShift[IO],
-                 timer: Timer[IO]
-               ): Kleisli[IO, Request[IO], Response[IO]] = {
+    implicit metrikaClient: MetrikaClient,
+    cs: ContextShift[IO],
+    timer: Timer[IO]
+  ): Kleisli[IO, Request[IO], Response[IO]] = {
 
     implicit val imTransactor: HikariTransactor[IO] = transactor
 
@@ -37,15 +39,15 @@ object Routing {
           // Decode a User request
           downloadStatisticsTask <- req.as[DownloadStatisticsTask]
 
-          fiber <- MetrikaDataStreamer.createMetrikaTaskAndStreamToDb(downloadStatisticsTask).start
+          fiber <- MetrikaDataStreamer
+            .createMetrikaTaskAndStreamToDb(downloadStatisticsTask)
+            .start
 
           // Encode a hello response
-          resp <- Ok( "Started" )
+          resp <- Ok("Started")
         } yield (resp)
     }
 
-    Router(
-      "/" -> helloWorldService
-    ).orNotFound
+    Router("/" -> helloWorldService).orNotFound
   }
 }

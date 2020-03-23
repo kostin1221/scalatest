@@ -2,14 +2,11 @@ package statistics.metrika
 
 import cats.effect._
 import cats.implicits._
-import doobie.util.transactor._
 import statistics.metrika.api.MetrikaClient
 //import org.http4s.syntax._
 //import org.http4s.dsl.io._
-import statistics.metrika.db.DoobieManager._
-import org.http4s.implicits._
 import org.http4s.server.blaze._
-
+import statistics.metrika.db.DoobieManager._
 import statistics.metrika.http.Routing
 
 object Main extends IOApp {
@@ -19,18 +16,20 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
 
-
     val resources = for {
       xa <- initTransactor
-      httpServer <-
-        BlazeServerBuilder[IO]
-          .bindHttp(8080)
-          .withHttpApp(Routing.getRouter(xa))
-          .resource
+      httpServer <- BlazeServerBuilder[IO]
+        .bindHttp(8080)
+        .withHttpApp(Routing.getRouter(xa))
+        .resource
 
     } yield (xa, httpServer)
 
-    resources.use { _ => IO.never }.as(ExitCode(0))
+    resources
+      .use { _ =>
+        IO.never
+      }
+      .as(ExitCode(0))
   }
 
 //    args.headOption match {

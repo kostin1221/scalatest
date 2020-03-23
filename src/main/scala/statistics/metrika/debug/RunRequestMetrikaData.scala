@@ -1,32 +1,16 @@
 package statistics.metrika.debug
 
-import statistics.metrika.api.MetrikaClient
-import statistics.metrika.api.dto.MetrikaApi._
 import cats.effect._
-import cats._
-import doobie.free.connection._
-import statistics.metrika.db.{DbStreamer, MetrikaFieldsMap}
+import statistics.metrika.api.MetrikaClient
+import statistics.metrika.db.MetrikaFieldsMap
 //import doobie.util.transactor.{Transactor, _}
 //import cats.implicits._
 
-import fs2.interop.reactivestreams._
-
-import cats.syntax.show._
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-import fs2._
-import sttp.client.{DeserializationError, HttpError}
-import cats.syntax.parallel._
-import cats.data.NonEmptyList
-import statistics.metrika.api.dto.FetcherApi._
+import com.typesafe.scalalogging.LazyLogging
 import statistics.metrika.db.DoobieManager.initTransactor
-import statistics.metrika.downloader.MetrikaDataStreamer._
 //import doobie._
 import doobie.implicits._
-import doobie.free.connection._
 //import doobie.syntax.stream._
-import doobie.hikari._
-
-import scala.concurrent.ExecutionContext
 
 object RunRequestMetrikaData extends IOApp with LazyLogging {
 //  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
@@ -52,7 +36,6 @@ object RunRequestMetrikaData extends IOApp with LazyLogging {
 //      Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
 //    )
 
-
 //    val task = DownloadStatisticsTask(token, counter, "2020-02-01", "2020-02-10", List("ym:s:visitID", "ym:s:UTMMedium"), Visits)
 //    return createTaskAndStreamWhenReady(task)
 //      .flatMap(stream => {
@@ -72,7 +55,6 @@ object RunRequestMetrikaData extends IOApp with LazyLogging {
 //          .drain
 //      })
 //      .flatMap(_ => IO.pure(ExitCode.Success))
-
 
 //    val metrikaLogGet = MetrikaLogGet(token, counter, 7304311)
 //    val io = for {

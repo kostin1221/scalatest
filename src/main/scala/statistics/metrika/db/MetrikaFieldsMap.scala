@@ -35,10 +35,11 @@ object MetrikaFieldsMap {
 
   def generateCreateTableSql = {
     val columns = fieldsMap
-      .map( f => s"${f._2} varchar(255)")
+      .map(f => s"${f._2} varchar(255)")
       .reduce(_ + ",\n" + _)
     s"CREATE TABLE metrika_visits (id serial PRIMARY KEY, request_id INT, $columns);"
   }
 
-  def mapMetrikaFieldsToColumns(csvHead: Array[String]) = csvHead.map(fieldsMap.getOrElse(_, "undefined"))
+  def mapMetrikaFieldsToColumns(csvHead: Array[String]) =
+    csvHead.map(fieldsMap.getOrElse(_, "undefined"))
 }
